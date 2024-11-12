@@ -1,10 +1,8 @@
 # Requirement Similarity
 
-An example of using NLP and embeddings to analyze requirements. It takes two datasets and uses both natural language processing and embeddings to measure the similarity between a new requirement and a table of existing requirements. 
+This repository provides an example of similarity analysis for requirements. It takes two datasets and uses both natural language processing and embeddings to measure the similarity between a new requirement and a table of existing requirements. 
 
-We analyze two types of similarity- textual similarity and semantic similarity.
-Textual similarity is the similarity between the words in the requirements.
-Semantic similarity is the similarity between the meaning of the requirements.
+We analyze two types of similarity - textual similarity and semantic similarity. Textual similarity is the similarity between the words in the requirements.Semantic similarity is the similarity between the meaning of the requirements.
 
 One important consideration - we need to normalize all these metrics so they return scores between 0 and 1. 
 The beauty of normalization is that we can create a weighted ensemble score by simply taking a weighted sum of the metrics.
@@ -34,62 +32,28 @@ This dataset is much larger, and contains requirements for a variety of differen
 
 ## Textual Similarity Methods
 
-For exact matching, we use the Jaccard similarity, Levenshtein distance, ROUGE and BLEU. 
-The goal of analyzing textual similarity is to find requirements that are exactly the same or very similar.
+The goal of analyzing textual similarity is to find requirements that are exactly the same or very similar. For textual similarity, we use the Jaccard similarity, Levenshtein distance, ROUGE and BLEU. BLEU and ROUGE provide complementary insights (e.g. high BLEU + low ROUGE indicates accurate but incomplete matches), with ROUGE better for finding complete coverage and BLEU better for precise matches. BLEU and Jaccard similarity are based on token overlap, so we need to tokenize the requirements before we can calculate these metrics.
 
 ### Jaccard Similarity
-- Measures similarity between finite sets by comparing their intersection to their union
-- Good for a simple comparison of word overlap between texts
-- Range: 0 (completely different) to 1 (identical)
+Jaccard similarity measures similarity between finite sets by comparing their intersection to their union. It's good for a simple comparison of word overlap between texts, with a range from 0 (completely different) to 1 (identical).
 
 ### Levenshtein Distance
-- Counts minimum number of single-character edits needed to change one string into another
-- Good for catching typos and minor variations in requirements
-- Raw score needs to be normalized for text length
+Levenshtein distance counts the minimum number of single-character edits (insertions, deletions, or substitutions) needed to transform one string into another. It's particularly good at catching typos and minor variations in requirements text. Since the raw score depends on string length, it needs to be normalized to provide a consistent similarity metric between 0 and 1.
 
 ### ROUGE
-- ROUGE (Recall-Oriented Understudy for Gisting Evaluation) was originally designed for evaluating automatic summarization, but it's quite useful for general text similarity.
-- Focuses on recall (how much reference text is captured)
-- Better for measuring if all important content is present
-- Multiple variants (ROUGE-N, ROUGE-L, ROUGE-W)
-- Originally for summarization evaluation
-- More suitable when completeness is important
-- ROUGE is particularly useful for similarity because it captures different aspects of similarity through its variants
-- It provides both precision and recall, giving a more complete picture of similarity, but we use the normalized F1-score as a single similarity metric
-- It's well-established in NLP research and has implementations in many languages.
-- ROUGE might be better if you want to ensure all aspects of a requirement are covered
+ROUGE (Recall-Oriented Understudy for Gisting Evaluation) is a text similarity metric originally designed for evaluating automatic summarization. It focuses on recall by measuring how much of the reference text is captured, making it ideal for ensuring completeness of content. With multiple variants (ROUGE-N, ROUGE-L, ROUGE-W) and the ability to provide both precision and recall metrics (we use the normalized F1-score), ROUGE effectively captures different aspects of similarity. As a well-established NLP metric with widespread implementation support, it's particularly valuable when you need to verify that all aspects of a requirement are thoroughly covered.
 
 ### BLEU
-- Focuses on precision (how accurate the candidate text is)
-- Uses a brevity penalty to prevent very short matches
-- Combines different n-gram precisions (usually up to 4-grams)
-- Originally for machine translation evaluation
-- More suitable when accuracy is important
-- BLEU might be better if you want to ensure precise matching and avoid false positives
-
-Using both could provide complementary insights:
-High BLEU + Low ROUGE = Accurate but incomplete match
-Low BLEU + High ROUGE = Complete but imprecise match
-High both = Very similar requirements
-Low both = Very different requirements
-The best choice often depends on your specific use case:
-If you're looking for requirements that completely cover a reference requirement → ROUGE
-If you're looking for requirements that precisely match → BLEU
-3. If you want comprehensive similarity analysis → Use both
-
-BLEU and Jaccard similarity are based on token overlap, so we need to tokenize the requirements before we can calculate these metrics.
+BLEU focuses on precision by measuring how accurate the candidate text is compared to the reference. It uses a brevity penalty to prevent very short matches and combines different n-gram precisions (usually up to 4-grams). While originally designed for machine translation evaluation, BLEU is more suitable when accuracy is important, as it tends to be better at ensuring precise matching and avoiding false positives.
 
 ## Semantic Similarity Methods
 
-For semantic similarity, we use the cosine similarity between the embeddings of the requirements and test different embedding models. 
-The goal of analyzing semantic similarity is to find requirements that are similar in meaning, but might have different wording.
+Semantic similarity measures how close requirements are in meaning, rather than exact wording. To capture this meaning computationally, we use embeddings - dense vector representations of text that encode semantic information. These embeddings are created using transformer-based encoding models like BERT, GPT, and Sentence-BERT, which are neural networks that condense words into numerical semantics rather than treating them as independent tokens.
 
-Most embedding models (like BERT, GPT, etc.) come with their own specialized tokenizers that:
-1. Know the model's vocabulary
-2. Handle special tokens (like [CLS], [SEP], <s>, </s>)
-3. Apply specific tokenization rules
+The power of embeddings comes from how they represent similar concepts close together in vector space, which we measure using cosine similarity. For example, terms like "authenticate" and "log in" will have similar embeddings, as will phrases like "shall" and "must", or "via email" and "using their email address". This allows us to find requirements that express the same ideas even when worded quite differently.
+
+When choosing an embedding model, we need to consider the tradeoffs between speed, accuracy, and domain specificity. Smaller models like MiniLM are faster and good for prototyping, while larger models like BGE and GTE provide better accuracy at the cost of speed. The domain match is also important - CodeBERT may work well for software requirements, while models like SPECTER2 and BGE might be better suited for technical documentation. Each model has its own strengths and weaknesses, so testing different options is important. Additionally, each model uses a different tokenizer and vocabulary, which can affect the results.
 
 ## Ensemble Scoring
 
-We normalize all the metrics so they return scores between 0 and 1, and then create a weighted ensemble score by simply taking a weighted sum of the metrics.
-The goal here is to store the weights as a hyperparameter so we can easily tune the solution based on SME feedback.
+We normalize all the metrics so they return scores between 0 and 1, and then create a weighted ensemble score by simply taking a weighted sum of the metrics. The goal here is to store the weights as a hyperparameter so we can easily tune the solution based on SME feedback.
