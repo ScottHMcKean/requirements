@@ -106,6 +106,10 @@ print(f"Endpoint named {endpoint_name} is ready.")
 
 # COMMAND ----------
 
+display(spark.table("shm.requirements.pure_dataset"))
+
+# COMMAND ----------
+
 from databricks.sdk import WorkspaceClient
 import databricks.sdk.service.catalog as c
 from vs_utils import index_exists, wait_for_index_to_be_ready
@@ -132,7 +136,7 @@ for embedding_name, embedding in embedding_deployments.items():
   else:
     #Trigger a sync to update our vs content with the new data saved in the table
     # wait_for_index_to_be_ready(vsc, endpoint_name, vs_index_fullname)
-    # vsc.get_index(endpoint_name, vs_index_fullname).sync()
+    vsc.get_index(endpoint_name, vs_index_fullname).sync()
     pass
 
   print(f"index {vs_index_fullname} on table {source_table_fullname} is ready")
@@ -147,7 +151,7 @@ display(df.limit(10))
 import mlflow.deployments
 deploy_client = mlflow.deployments.get_deploy_client("databricks")
 
-query = 'Create a tank battle game.'
+query = 'The system shall provide the ability to capture medications entered by authorized users other than the prescriber.'
 
 for embedding_name, embedding in embedding_deployments.items():
   print(embedding_name)

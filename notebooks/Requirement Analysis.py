@@ -28,8 +28,8 @@ from similarity import RequirementSimilarity
 
 # Set up default logger
 import logging
-logging.basicConfig(level=logging.WARNING)
-log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.ERROR)
+log = logging.getLogger()
 logging.getLogger("py4j.java_gateway").setLevel(logging.ERROR)
 logging.getLogger("py4j.client_server").setLevel(logging.ERROR)
 
@@ -175,20 +175,18 @@ req_similarity.bleu_sim(text1, text2)
 
 # COMMAND ----------
 
-from sentence_transformers import SentenceTransformer
-
-embedding_models=[
-    'all-MiniLM-L6-v2',
-    'microsoft/codebert-base',
-    'BAAI/bge-large-en-v1.5',
-    'dell-research-harvard/lt-un-data-fine-industry-en'
-    ]
-
-sentence_transformers = [
-  SentenceTransformer(model) for model in embedding_models
-  ]
-
+from similarity import RequirementSimilarity
+req_similarity = RequirementSimilarity(embedding_models={
+    'minilm': 'all-MiniLM-L6-v2',
+    'codebert': 'microsoft/codebert-base',
+    'bge': 'BAAI/bge-large-en-v1.5',
+    'lt-industry': 'dell-research-harvard/lt-un-data-fine-industry-en'
+    })
 
 # COMMAND ----------
 
+results = []
+for idx, row in df.iterrows():
+  results.append(req_similarity.get_combined_similarity(row['python_task'], row['java_task']))
 
+display(pd.DataFrame(results))
